@@ -7,4 +7,3 @@ Note I performed this analysis on vaccination data up until 3/13/21 so things ob
 
 Above in the files you can find a Jupyter notebook file and a normal Python .py scipt where you can play around with the analys and visualizations. You will see many of them are built as functions that you can pass different arguments for and have a look at altered charts from the ones I have produced in this file. Have a look!
 
-![Test](/Figs/Fig_1.png)
