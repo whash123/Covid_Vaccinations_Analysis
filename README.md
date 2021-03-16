@@ -42,7 +42,9 @@ for vacc_set in full_df['vaccines'].unique():
     }
     
 vacc_set_df = pd.DataFrame(count_vacc_sets).transpose().reset_index().rename(columns = {'index': 'vaccine_set'})
+```
 
+```
 vacc_tm = px.treemap(vacc_set_df,
                  path = ['vaccine_set'],
                  values = 'count',
@@ -61,7 +63,9 @@ for total_vacc in list(full_df.vaccines.unique()):
     for comp in split_vaccs:
         if comp not in unique_vaccines:
             unique_vaccines.append(comp)
+```
 
+```
 vacc_all_countries = {}
 for vacc_comp in unique_vaccines:
     countries = full_df[full_df.vaccines.str.contains(vacc_comp)]['country'].unique().tolist()
@@ -69,7 +73,9 @@ for vacc_comp in unique_vaccines:
         'number': len(countries),
         'list_countries': countries
     }
+```
 
+```
 def binary_vacc(country, vaccine):
     if country in vacc_all_countries[vaccine]['list_countries']:
         return True
@@ -78,9 +84,13 @@ def binary_vacc(country, vaccine):
 
 for vacc in vacc_all_countries.keys():
     full_df[vacc] = full_df['country'].apply(binary_vacc, vaccine = vacc)
+```
 
+```
 cols_to_ffill = ['total_vaccinations', 'people_vaccinated', 'people_fully_vaccinated', 'total_vaccinations_per_hundred', 'people_vaccinated_per_hundred', 'people_fully_vaccinated_per_hundred']
+```
 
+```
 def vaccine_map(vaccine_name = None):
     if (vaccine_name is None):
         print('Error must input a vaccine type')
@@ -167,7 +177,9 @@ vaccine_map('Sinovac')
 
 ```
 unique_vaccines_countries = pd.DataFrame(vacc_all_countries).transpose().reset_index().rename(columns = {'index': 'vaccine_company'}).sort_values(by = 'number', ascending = False)
+```
 
+```
 vacc_bar = px.bar(unique_vaccines_countries,
              x = 'vaccine_company', y = 'number',
              labels = {'vaccine_company': 'Vaccination Company', 'number': 'Number of Countries Available'})
@@ -187,7 +199,9 @@ def days_since_start(date, first_date):
     else:
         delta = date - first_date
         return delta.days
-        
+```
+
+```
 adjusted_df = full_df[full_df['country'] == all_countries[0]]
 a_first_vaccination = min(adjusted_df['date'])
 a_total_vaccinations = max(adjusted_df['total_vaccinations'])
@@ -377,11 +391,132 @@ raw_adjusted_comparison.show()
 
 
 ## 3) Adjusted vaccination progress and projecting the end of Covid!
+
+```
+total_vacc_df['average_daily_percent_vaccinated'] = round(total_vacc_df['total_per_hundred'] / total_vacc_df['days_since_starting'], 4)
+total_vacc_df['world'] = 'world'
+total_vacc_df = total_vacc_df.replace(np.inf, np.nan)
+```
+
+```
+def avg_vaccination_progress(vals, min_pop = 10000000):
+    if vals != 'total' and vals != 'average':
+        print('must input an appropriate value type')
+    elif vals == 'total':
+        val_metric = 'total_per_hundred'
+    elif vals == 'average':
+        val_metric = 'average_daily_percent_vaccinated'
+    
+    chart_df = total_vacc_df[total_vacc_df['population'] >= min_pop]
+    fig = px.treemap(chart_df,
+                     path = ['world', 'continent', 'country'],
+                     values = val_metric,
+                     height = 750)
+    fig.data[0].textinfo = 'label+text+value'
+
+    fig.show()
+```
+
+```
+avg_vaccination_progress(min_pop = 10000000, vals = 'total')
+```
+
 ![Fig 23](/Figs/Fig_23.png)
+
+```
+avg_vaccination_progress(min_pop = 1000000, vals = 'average')
+```
+
 ![Fig 24](/Figs/Fig_24.png)
+
+```
+for cont in total_vacc_df['continent'].unique():
+    continent_df = total_vacc_df[total_vacc_df['continent'] == cont]
+    sorted_df = continent_df.sort_values(by = 'average_daily_percent_vaccinated', ascending = False)
+    
+    fig = px.bar(sorted_df.sort_values(by = 'average_daily_percent_vaccinated', ascending = False),
+                 x = 'country', y = 'average_daily_percent_vaccinated',
+                 color = 'total_per_hundred',
+                 color_continuous_scale = 'deep',
+                 width = 800,
+                 height = 500,
+                 title = cont,
+                 labels = dict(total_per_hundred = 'Total Vaccinations Per Hundred', average_daily_percent_vaccinated = 'Average % Population Vaccinated Per Day', country = 'Country'))
+    fig.show()
+```
+
 ![Fig 25](/Figs/Fig_25.png)
 ![Fig 26](/Figs/Fig_26.png)
 ![Fig 27](/Figs/Fig_27.png)
 ![Fig 28](/Figs/Fig_28.png)
 ![Fig 29](/Figs/Fig_29.png)
+
+```
+countries_to_predict = []
+for country in adjusted_df['country'].unique():
+    check_df = adjusted_df[adjusted_df['country'] == country]
+    if max(check_df['people_vaccinated_per_hundred']) > 0:
+         countries_to_predict.append(country)
+```
+
+```
+def curve_func(x, a, b, c):
+    return a * x + b * x**2 + c
+
+country_results = {}
+
+for country in countries_to_predict:
+    country_df = adjusted_df[adjusted_df['country'] == country]
+    
+    if(country_df.shape[0] >= 5):
+        xdata = np.array(country_df['vaccination_day_number'])
+        ydata = np.array(country_df['people_vaccinated_per_hundred'])
+
+        popt, pcov = curve_fit(curve_func, xdata = xdata, ydata = ydata)
+
+        x = 0
+        max_perc_vacc = 0
+        day_for_max = 0
+
+        while x < 365:
+            pred = popt[0] * x + popt[1]* x**2 + popt[2]
+            if max_perc_vacc < 100:
+                if pred > max_perc_vacc:
+                    max_perc_vacc = pred
+                    day_for_max = x
+
+            if pred >= 100:
+                max_perc_vacc = pred
+                day_for_max = x
+                break
+            elif pred < 100:
+                x = x + 1
+
+        if max_perc_vacc >= 100:
+            country_results[country] = day_for_max
+```
+
+```
+country_results_df = pd.DataFrame(country_results, index = ['days_until_fully_vaccinated']).transpose()\
+    .reset_index().rename(columns = {'index': 'country'})
+
+country_results_df = country_results_df.merge(total_vacc_df, on = 'country')
+country_results_df['final_date'] = country_results_df['day_started'] + pd.to_timedelta(country_results_df['days_until_fully_vaccinated'], unit = 'd')
+```
+
+```
+pred_plot = px.scatter(country_results_df,
+           x = 'final_date',
+           y = 'total_per_hundred',
+           size = 'population',
+           hover_name = 'country',
+           color = 'continent',
+           size_max = 80,
+           height = 800,
+           title = 'Comparing current country vaccination progress with estimated final vaccination date',
+           labels = dict(total_per_hundred = 'Total Vaccinations per Hundred (as of today)', final_date = 'Rough Estimate for Country to be Fully Vaccinated'))
+
+pred_plot.show()
+```
+
 ![Fig 30](/Figs/Fig_30.png)
