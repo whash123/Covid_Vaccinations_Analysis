@@ -10,6 +10,11 @@ Above in the files you can find a Jupyter notebook file and a normal Python .py 
 Have a look at how things are going as we aim to put Covid-19 behind us!
 
 
+## Table of Contents
+ * [Section 1 - Exploring Different Types of Vaccinations](#1-exploring-the-different-types-of-vaccinations-available-around-the-world)
+ * [Section 2 - Looking In-Depth at Country Progression](#2-comparing-country-vaccination-rollout-progression)
+ * [Section 3 - Population Adjusted Progress and Projecting the End of Covid!](#3-adjusted-vaccination-progress-and-projecting-the-end-of-covid)
+ 
 
 ## 1) Exploring the different types of vaccinations available around the world
 ```
