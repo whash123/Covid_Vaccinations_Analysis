@@ -176,7 +176,8 @@ vaccine_map('Sinovac')
 ![Fig 14](/Figs/Fig_14.png)
 
 ```
-unique_vaccines_countries = pd.DataFrame(vacc_all_countries).transpose().reset_index().rename(columns = {'index': 'vaccine_company'}).sort_values(by = 'number', ascending = False)
+unique_vaccines_countries = pd.DataFrame(vacc_all_countries).transpose().reset_index()\
+    .rename(columns = {'index': 'vaccine_company'}).sort_values(by = 'number', ascending = False)
 ```
 
 ```
