@@ -609,4 +609,4 @@ pred_plot.show()
 
 ![Fig 30](/Figs/Fig_30.png)
 
-And voila there you have it! The 7-8 months between the start of this summer and the middle of next winter will be tough, but it looks to be hopeful as well! And hey, with the rate that vaccinations are progressing and production increasing, maybe we will be past this sooner than we thought!
+And voila there you have it! The next year or year and a half will be tough, but it looks to be hopeful as well! And hey, with the rate that vaccinations are progressing and production increasing, maybe we will be past this sooner than we thought!
