@@ -217,6 +217,10 @@ But let's take a closer look at how some of these countries are doing with their
 
 ## 2) Comparing country vaccination rollout progression
 
+So, there is a lot of good information in this dataset pertaining to each country's progress with the vaccinations. There is raw vaccine data, population-adjusted data, etc. and it is all listed per day since the first day they were able to successfully vaccinate one of their citizens. This first part, however, I will be building a few more interesting variables I think might help further down the road.
+
+For each of these countries, I am going to do some individual progress adjustments. These adjusted variables will be at the country level and include information for each date like how many days since they started vaccinating (so we can see progress for each country benchmarked to when they started progress) and percent of their own overall vaccinations they have completed up until that date, which can give some interesting insights into the pace at which each country was able to ramp up their vaccine distribution.
+
 ```
 all_countries = full_df['country'].unique().tolist()
 def days_since_start(date, first_date):
@@ -258,6 +262,10 @@ for country in all_countries_left:
     
     adjusted_df = pd.concat([adjusted_df, country_df], axis = 0)
 ```
+
+Now that we have our adjusted variables, we can start having a look at how these countries have progressed since they began vaccinating.
+
+First we will just take a quick look at the raw progression information as a baseline, and we will look at the countries grouped together by the individual vaccine they have access to, as well as the vaccine set they have access to, similar to how we did this above in Section 1.
 
 ```
 lines = []
@@ -311,6 +319,10 @@ unique_vacc_lp.show()
 
 ![Fig 17](/Figs/Fig_17.png)
 
+As we noted before, these charts are heavily biased by the amount of countries each vaccine and vaccine set are found in, as well as the populations of such countries. This is why Pfizer/BioNTech is leading the way by such a large margin, having been distributed early, to many, large countries.
+
+What if we wanted to look at a similar type of progress chart, but broken out by country rather than by vaccine? Below is some code that will allow us to create a dictionary of some summary statistics for each country that will initially be important so we can choose to plot the performance of the highest vaccinating countries, but we will gather more summary data along the way that will help in Section 3.
+
 ```
 max_vacc = {}
 for c in all_countries:
@@ -332,6 +344,13 @@ total_vacc_df = pd.DataFrame(max_vacc).transpose().reset_index()\
     .merge(continents, how = 'left', left_on = 'country', right_on = 'Country').drop('Country', axis = 1)\
     .rename(columns = {'Population': 'population', 'Continent': 'continent'})
 ```
+
+Now that we have this dictionary ready to be used, let's make a function where you can look at the top *n* number of countries and their progress so far, in raw vaccination numbers and population-adjusted numbers.
+
+This is important for 2 reasons: 1) there are way too many countries to make any chart with all of them readable or useful to use and 2) for the population-adjusted numbers, many of the countries with the lowest populations have the highest progress, biased by their low overall population. Being able to compare the progress of the top 30 or 50 countries, where the numbers are a bit more sensible to look at can give us more insights.
+
+Like all my other chart-building functions, if you download the notebook or script you can play around with them to create your own charts and find some interesting pieces of information yourself!
+
 
 ```
 def top_countries_chart(n = 25, time_period = 'date', pop_adjusted = True):
@@ -373,16 +392,22 @@ def top_countries_chart(n = 25, time_period = 'date', pop_adjusted = True):
     fig.show()
 ```
 
+Let's first just look at the top 50 countries in raw vaccinations, setting the timeline to be the date:
+
 ```
 top_countries_chart(n = 50, time_period = 'date', pop_adjusted = False)
 ```
 
 ![Fig 18](/Figs/Fig_18.png)
 
+While this is interesting and does help paint the picture, what if we wanted to see how each country was doing on their nth day of vaccinations? For this, we can easily set the x-axis to be the "vaccination day number," which adjusts each countries progress to start at their first day of vaccinating. This will help us see some of the countries that may have higher progress than other because they started out earlier, or vice versa.
+
 ```
 top_countries_chart(n = 50, time_period = 'vaccination_day_number', pop_adjusted = False)
 ```
 ![Fig 19](/Figs/Fig_19.png)
+
+This helps as well - giving us some more clues as to how they are doing. But the natural next question is - aren't these numbers heavily skewed towards countries with larger populations? Isn't it reasonable that countries with more people will have higher numbers for vaccines? And yes, that is the case. So below we have similar charts, comparing the progress of each country in how many vaccinations they have administered *per hundred citizens,* which should help. 
 
 ```
 top_countries_chart(n = 30, time_period = 'date', pop_adjusted = True)
@@ -395,6 +420,10 @@ top_countries_chart(n = 30, time_period = 'vaccination_day_number', pop_adjusted
 ```
 
 ![Fig 21](/Figs/Fig_21.png)
+
+Now we have a much better idea of how they are doing! While it may not have been obvious before, since their populations are too low to be at the top of the raw vaccinations charts, Israel and the United Arab Emirates are actually leading the way in per-hundred vaccinations. Israel actually has administered more than 1 vaccine per person at the time of writing! These countries invested heavily and early, and were able to see some serious progress in beating Covid.
+
+Now that we have seen the progress for each country in raw numbers and in population-adjusted numbers individually, what if we plotted these together on the same chart? This is where our summary dictionary can come in handy. I'll color them by continent and make the sizes the populations, so we can extract a bit more information about how these countries are doing on raw x population-adjusted vaccinations:
 
 ```
 n = 25
@@ -414,6 +443,9 @@ raw_adjusted_comparison.show()
 
 ![Fig 22](/Figs/Fig_22.png)
 
+As you can see, this helps our case. While countries like the USA (far right) and India / China (two large red points) have the most number of vaccinations, that is clearly a function of their massive populations compared to other countries, while countries with smaller populations are doing really well, despite having smaller raw numbers. We could have easily missed this critical piece if we had left our charts to just total vaccinations.
+
+But what if we looked a little more about the rate at which these countries are vaccinating their citizens? And what if we could use that information to inform the future, and have a guess at when these populations will be fully vaccinated?
 
 
 ## 3) Adjusted vaccination progress and projecting the end of Covid!
