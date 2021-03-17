@@ -1,6 +1,6 @@
 # Covid Vaccinations Analysis
 
-This is a Python project analyzing and visualizing the current progress for the Covid vaccination rollout across the world. You can find the link to the dataset here, which is updated each day to include more vaccination data:
+This is a Python project analyzing and visualizing the current progress for the Covid vaccination rollout across the world. You can find the link to the dataset here, which is updated each day to include more data:
 [Covid data](https://www.kaggle.com/gpreda/covid-world-vaccination-progress)
 
 Note I performed this analysis on vaccination data up until 3/13/21 so things obviously could have changed since then!
@@ -17,6 +17,11 @@ Have a look at how things are going as we aim to put Covid-19 behind us!
  
 
 ## 1) Exploring the different types of vaccinations available around the world
+
+A good place to start with this data is by looking into the different types of vaccinations that exist, where they are being used, and which ones are being used as part of successful vaccination rollouts. Since many of the companies selling vaccines to countries are regionally-specific and came out at different times, it would be good to get a feel for which ones each country is using, and if that has any effect on vaccination progress.
+
+Let's first have a look around the world of which vaccines each country is currently using as part of its vaccination rollout plan against Covid-19:
+
 ```
 map_vaccines = px.choropleth(locations = full_df['country'], 
                              color = full_df['vaccines'],
@@ -29,6 +34,8 @@ map_vaccines.show()
 ```
 
 ![Fig 1](/Figs/Fig_1.png)
+
+As you can see, there are many different sets of vaccinations being used across the world, but the map doesn't tell us everything we need to know. Let's check and see how widespread each of these groupings of vaccinations are by taking the count of countries they have been used in.
 
 ```
 count_vacc_sets = {}
@@ -56,6 +63,12 @@ vacc_tm.show()
 
 ![Fig 2](/Figs/Fig_2.png)
 
+It's interesting to note that this dataset bundles the vaccines that a country are using together in one variable named *vaccines*. For each row, the value is a list of all the types of vaccinations a country is using, leading to many different unique sets of vaccines. For example, Guatemala is using only Moderna, whereas Israel is using both Moderna and Pfizer/BioNTech. Even though they have an overlap in Moderna, the lists are not the same and therefore they will be in separate categories for the chart as it groups distinct values.
+
+As you can see, the most popular *sets* of vaccines are countries that just have access to Oxford/AstraZeneca and those that just have access to Pfizer/BioNTech, though you can see some of the more unique sets (like Moderna, Oxford/AstraZeneca, and Pfizer/BioNTech together) are also prevalent. But this doesn't tell us the whole story does it? Let's find out how prevalent each individual vaccine is.
+
+We can use some string splitting to get each unique vaccine and create a dataframe counting the number of countries they appear in.
+
 ```
 unique_vaccines = []
 for total_vacc in list(full_df.vaccines.unique()):
@@ -74,6 +87,27 @@ for vacc_comp in unique_vaccines:
         'list_countries': countries
     }
 ```
+
+```
+unique_vaccines_countries = pd.DataFrame(vacc_all_countries).transpose().reset_index()\
+    .rename(columns = {'index': 'vaccine_company'}).sort_values(by = 'number', ascending = False)
+```
+
+Now that we have a df portraying the number of countries each *unique* vaccine is, we can compare these on a quick bar chart:
+
+```
+vacc_bar = px.bar(unique_vaccines_countries,
+             x = 'vaccine_company', y = 'number',
+             labels = {'vaccine_company': 'Vaccination Company', 'number': 'Number of Countries Available'})
+vacc_bar.show()
+```
+![Fig 15](/Figs/Fig_15.png)
+
+Ah, this paints a much better picture. We can see that, while Pfizer/BioNTech on its own was prevalent in 26 countries (that did not also have access to any other vaccines), it actually is used in 72 countries overall, some on its own and some as part of a set of offerings by the country. That helps clear things up a bit.
+
+But what if we wanted to learn more about a) where these individual vaccines are being rolled out, and how the countries that are using them are faring?
+
+Note: the line plots below show the overall vaccination progress for each country that has access to each of the vaccines. Since the data groups vaccines together, it's impossible to estimate the attribution of each vaccine to a country that is using it as part of a set of vaccinations they are offering.
 
 ```
 def binary_vacc(country, vaccine):
@@ -174,19 +208,6 @@ vaccine_map('Sinovac')
 
 ![Fig 13](/Figs/Fig_13.png)
 ![Fig 14](/Figs/Fig_14.png)
-
-```
-unique_vaccines_countries = pd.DataFrame(vacc_all_countries).transpose().reset_index()\
-    .rename(columns = {'index': 'vaccine_company'}).sort_values(by = 'number', ascending = False)
-```
-
-```
-vacc_bar = px.bar(unique_vaccines_countries,
-             x = 'vaccine_company', y = 'number',
-             labels = {'vaccine_company': 'Vaccination Company', 'number': 'Number of Countries Available'})
-vacc_bar.show()
-```
-![Fig 15](/Figs/Fig_15.png)
 
 
 
