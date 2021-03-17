@@ -103,9 +103,9 @@ vacc_bar.show()
 ```
 ![Fig 15](/Figs/Fig_15.png)
 
-Ah, this paints a much better picture. We can see that, while Pfizer/BioNTech on its own was prevalent in 26 countries (that did not also have access to any other vaccines), it actually is used in 72 countries overall, some on its own and some as part of a set of offerings by the country. That helps clear things up a bit.
+Ah, this paints a much better picture. We can see that, while Pfizer/BioNTech on its own was prevalent in 26 countries (that did not also have access to any other vaccines), it actually is used in 72 countries overall, some on its own and some as part of a set of offerings by the country. That helps clear things up a bit and makes sense, given we know Pfizer was one of the first manufacturers to distribute their vaccine.
 
-But what if we wanted to learn more about a) where these individual vaccines are being rolled out, and how the countries that are using them are faring?
+But what if we wanted to learn more about a) where these individual vaccines are being rolled out, and b) how the countries that are using them are faring? We can create a map for each vaccine and a line plot showing the progress of each country that has access to each vaccine below.
 
 Note: the line plots below show the overall vaccination progress for each country that has access to each of the vaccines. Since the data groups vaccines together, it's impossible to estimate the attribution of each vaccine to a country that is using it as part of a set of vaccinations they are offering.
 
@@ -209,7 +209,11 @@ vaccine_map('Sinovac')
 ![Fig 13](/Figs/Fig_13.png)
 ![Fig 14](/Figs/Fig_14.png)
 
+So this confirms quite a few things for us that we may have already assumed. Firstly, these vaccines are highly regional, which is evident when looking at Sputnik V penetrating Russia, East Asia, and some of South America, while vaccines like Moderna are really limited to only North America and Western Europe.
 
+Similarly, we find that, per-hundred-people, the countries that have access to the vaccines that were shipping earlier, like Pfizer/BioNTech and Oxford/AstraZeneca are in a better situation now than those reliant on more recent vaccinations, like Sinovac. This is likely highly related to how long they were able to roll out their vaccinations, and how much the companies were able to amp up their production and distribution lines.
+
+But let's take a closer look at how some of these countries are doing with their rollouts.
 
 ## 2) Comparing country vaccination rollout progression
 
