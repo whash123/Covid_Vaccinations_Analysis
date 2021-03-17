@@ -450,6 +450,10 @@ But what if we looked a little more about the rate at which these countries are 
 
 ## 3) Adjusted vaccination progress and projecting the end of Covid!
 
+Now, using our summary chart, we know how many total vaccinations per hundred citizens they have been able to administer, and we know how long they have been vaccinating their citizens for, with the "vaccination_day_number" variable, so we can find the straight-line average number of vaccinations per 100 people for each country per day. As stated before, some countries that started vaccinating early will have higher numbers today than those that were behind, but those same countries could be progressing at a faster rate. Let's have a look.
+
+This function below will allow us to create a treemap, using the new "world" column as a parent to each of the continents where the countries are grouped. You can pass the minimum population to be included in this chart (again, countries with fewer people skew higher on the population adjusted metrics) and whether or not you want to see the per-hundred vaccinations data as total / final-date or average per day they have been vaccinating.
+
 ```
 total_vacc_df['average_daily_percent_vaccinated'] = round(total_vacc_df['total_per_hundred'] / total_vacc_df['days_since_starting'], 4)
 total_vacc_df['world'] = 'world'
@@ -475,17 +479,29 @@ def avg_vaccination_progress(vals, min_pop = 10000000):
     fig.show()
 ```
 
+Let's first look at which countries ended up in the best place - that is, which countries have performed the most total vaccinations per hundred citizens at the time of writing. I will pass a minimum population of 10M people so we can get some of the more relavent countries with stable data:
+
 ```
 avg_vaccination_progress(min_pop = 10000000, vals = 'total')
 ```
 
 ![Fig 23](/Figs/Fig_23.png)
 
+As we can see, many of the Western European countries, the USA, and Chile have been able to roll out a good amount of vaccinations per person in their country, coming in around the 30-40 per hundred mark. Not bad!
+
+However, let's see which countries were the most efficient at vaccinating their population since they started vaccinating. We will look at countries with more than 1M people and set the value to "average" so we can see average number of vaccinations per hundred people per day:
+
 ```
 avg_vaccination_progress(min_pop = 1000000, vals = 'average')
 ```
 
 ![Fig 24](/Figs/Fig_24.png)
+
+Now that tells a different story - here we can see Israel and the UAE are performing the quickest, both performing around 1-1.3 vaccinations for every one hundred people in their country *per day*. This would be the same as the US averaging 3.5M vaccinations a day! That's incredible progress. As you can see, some of our current top performers at the total level, such as Chile, the USA, and England, are still among our most efficient distributors, however they may have started out slow and sped up as production increased.
+
+What we can do now is, instead of giving a population minimum and looking at some countries in each continent, we can have a look at every country in each continent and compare their progression - again, still on a per-day per-hundred people basis. Since many vaccinations are regionally-diverse, it would be interesting to compare countries with those in their own continent that may have access to similar resources.
+
+Below you can find a chart for each continent, where the y-axis is the per-day per-hundred people amount of vaccinations rolled out. The color (darker meaning more) represents the total number of vaccinations rolled out per hundred people, so we can see if some countries are vaccinating quickly, but still not fully rolled out, vs countries that, while slower, have reached more people in total:
 
 ```
 for cont in total_vacc_df['continent'].unique():
@@ -508,6 +524,18 @@ for cont in total_vacc_df['continent'].unique():
 ![Fig 27](/Figs/Fig_27.png)
 ![Fig 28](/Figs/Fig_28.png)
 ![Fig 29](/Figs/Fig_29.png)
+
+Now, I hinted at it before, but we actually have a variable for "people vaccinated per hundred" - which slightly differs from number of vaccinations rolled out per hundred, as some vaccines need more than 1 vaccination to complete the job. Thus, we saw how Israel actually administered more than 1 vaccination per person, but less than 100% of the population had been vaccinated.
+
+Using this *people* vaccinated per hundred information, and the date / vaccination day number data, we can project how countries will do going forward to see if we can get an educated guess on when they will be done vaccinating their entire populations.
+
+I want to note before this analysis that this was not the point of this notebook - the main goal was to learn more about how countries are doing and the vaccinations they are using. This is not meant to be a robust machine learning time-series prediction model, nor am I expecting any of these outcomes to be perfectly accurate. This was meant to be an interesting quick exercise to add a little context surrounding where we are as a world in opening back up.
+
+With that being said, the below allows us to iterate over each country and perform a simple SciPy fitted curve to each country's progression in vaccinating its population and, using the parameters it returns, predict the future people vaccinated per hundred. Using this, we can find each country's final end date when they will have vaccinated their entire population!
+
+Again, I understand there are many flaws with this process - that, being highly overfitted to the current curve, any country that has slowed down its production recently is projected to continue slowing down forever, and that it assumes the country continues on the same path it has so far, with no changes. Also, this assumes 100% of the population would take the vaccine, and let's be honest, that's not going to happen...
+
+Obviously these are issues, but it was still a fun quick exercise!
 
 ```
 countries_to_predict = []
@@ -554,6 +582,8 @@ for country in countries_to_predict:
             country_results[country] = day_for_max
 ```
 
+Now that we have our super accurate predictions for how many days each country needs to vaccinate 100% of its population, we can add that to each country's vaccination start date to get the final date needed for Covid to be knocked out and the world to get back to pre-pandemic days!
+
 ```
 country_results_df = pd.DataFrame(country_results, index = ['days_until_fully_vaccinated']).transpose()\
     .reset_index().rename(columns = {'index': 'country'})
@@ -578,3 +608,5 @@ pred_plot.show()
 ```
 
 ![Fig 30](/Figs/Fig_30.png)
+
+And voila there you have it! The 7-8 months between the start of this summer and the middle of next winter will be tough, but it looks to be hopeful as well! And hey, with the rate that vaccinations are progressing and production increasing, maybe we will be past this sooner than we thought!
